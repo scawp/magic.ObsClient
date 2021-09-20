@@ -24,7 +24,7 @@ end
 
 obs_client.onmessage = function(self, msg)
   self:log("--------------")
-  self:log(msg)
+  self:log(msg, "Event")
 
 
   local json_msg = self.decode(msg)
@@ -43,10 +43,11 @@ obs_client.debug = {
   init_time = os.time()
 }
 
-obs_client.log = function(self, data)
+obs_client.log = function(self, data, type)
+  type = type or "obs_client"
   print(data)
   love.filesystem.append("obsClient-" .. self.debug.init_time .. ".log", 
-                         "[".. os.time() .. "] obs_client: " .. tostring(data) .. "\r\n")
+                         "[".. os.time() .. "] " .. type .. ": " .. tostring(data) .. "\r\n")
 end
 
 return obs_client
