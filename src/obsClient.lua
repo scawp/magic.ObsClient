@@ -1,8 +1,9 @@
 local obs_client = require("websocket").new("localhost", 6666)
+--local newdecoder = require 'decoder'
 
 obs_client.init = function(self)
-  self.decode = require('decoder')
-  self.encode = require('encoder')
+  newdecoder = require 'decoder'
+  self.decode = newdecoder()
   --self:load_apis()
 
   self.connected = false
@@ -23,12 +24,11 @@ obs_client.onopen = function(self)
 end
 
 obs_client.onmessage = function(self, msg)
-  self:log("--------------")
   self:log(msg, "Event")
 
+  local data = self.decode(msg)
 
-  local json_msg = self.decode(msg)
-  self:log(json_msg)
+  self:log(data["update-type"], "update-type")
 
   --process msg
 
