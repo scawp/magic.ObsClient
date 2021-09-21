@@ -23,15 +23,23 @@ obs_client.onopen = function(self)
   self:log("Connection to OBS opened")
 end
 
+obs_client.SwitchScenes = function(self, data)
+  self:log("Running SwitchScenes \"" .. data["scene-name"] .. "\"", "Success")
+end
+
 obs_client.onmessage = function(self, msg)
   self:log(msg, "Event")
 
-  local data = self.decode(msg)
-
-  self:log(data["update-type"], "update-type")
-
-  --process msg
-
+  local err = nil
+  local success, data = pcall(self.decode, msg)
+  if not success then
+    self:log("JSON Decoding Error " .. data, "Invalid Data")
+  else
+    success, err = pcall(self[data["update-type"]], self, data)
+    if not success then
+      self:log("Ignoring " .. data["update-type"] .. " " .. err, "Unhandled Event")
+    end
+  end
 end
 
 obs_client.onclose = function(self)
