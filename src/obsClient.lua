@@ -4,6 +4,9 @@ local obs_client = require("websocket").new("localhost", 6666)
 obs_client.init = function(self)
   newdecoder = require 'decoder'
   self.decode = newdecoder()
+
+  newencoder = require 'encoder'
+  self.encode = newencoder()
   --self:load_apis()
 
   self.connected = false
@@ -23,9 +26,9 @@ obs_client.onopen = function(self)
   self:log("Connection to OBS opened")
 end
 
-obs_client.SwitchScenes = function(self, data)
-  self:log("Running SwitchScenes \"" .. data["scene-name"] .. "\"", "Success")
-end
+--obs_client.SwitchScenes = function(self, data)
+--  self:log("Running SwitchScenes \"" .. data["scene-name"] .. "\"", "Success")
+--end
 
 obs_client.onmessage = function(self, msg)
   self:log(msg, "Event")
