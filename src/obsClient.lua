@@ -6,7 +6,6 @@ obs_client.init = function(self)
   local jsonencoder = require 'encoder'
   self.json_decode = jsondecoder()
   self.json_encode = jsonencoder()
-  --self:load_apis()
 
   self.msg_queue = {}
   self.request_callback_list = {}
@@ -19,10 +18,6 @@ obs_client.new_message_id = function(self)
   return self.prev_message_id + 1
 end
 
-obs_client.load_apis = function()
-  --obs_client.scenes = require "src.api.requests.scenes"
-end
-
 --update already in the require, uncomment if needs extending
 --obs_client.update = function(self, dt)
   --self:update()
@@ -31,11 +26,9 @@ end
 obs_client.onopen = function(self)
   self.connected = true
   self:log("Connection to OBS opened")
-end
 
---obs_client.SwitchScenes = function(self, data)
---  self:log("Running SwitchScenes \"" .. data["scene-name"] .. "\"", "Success")
---end
+  self:sendqueue()
+end
 
 obs_client.sendqueue = function(self)
   for i, query_str in ipairs(self.msg_queue) do
