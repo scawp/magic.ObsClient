@@ -8,6 +8,7 @@ Control OBS via websockets api
 - [lunajson](https://github.com/grafi-tt/lunajson)
 - [love2d-lua-websocket](https://github.com/flaribbit/love2d-lua-websocket)
 
+
 `lunajson`, `love2d-lua-websocket` (and `src/obsClient.lua`) must be included in your love projects `require path` (I prefer using submodules (see [mägic.ObsClient-demo](https://github.com/scawp/magic.ObsClient-demo) for usage) but you can also copying `src/obsClient.lua` from this project into yours)
 
  `OBS` must have the `obs-websocket` plugin installed, see [obs-websocket](https://github.com/Palakis/obs-websocket) for instructions.
