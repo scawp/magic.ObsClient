@@ -73,9 +73,12 @@ end
                           end
                         end)
  ```
+`request_type` must be the first parameter, the rest can be in any order
+
+
 ### When to use retry
 
-enable `retry` to `true` as second parameter to add request to queue to be sent when connection is established, otherwise default `false` request is dropped
+set `retry` to `true` to add request to queue to be sent when connection is established, otherwise default `false` request is dropped
 
 ### When to use message_id
 
