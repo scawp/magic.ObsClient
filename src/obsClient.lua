@@ -2,8 +2,8 @@ local websocket = require("websocket")
 local jsondecoder = require 'decoder'
 local jsonencoder = require 'encoder'
 
---helpers
-function string.explode(str, div) --https://love2d.org/wiki/String_exploding
+--helper functions
+function string_explode(str, div) --https://love2d.org/wiki/String_exploding
   assert(type(str) == "string" and type(div) == "string", "invalid arguments")
   local o = {}
   while true do
@@ -17,7 +17,7 @@ function string.explode(str, div) --https://love2d.org/wiki/String_exploding
   return o
 end
 
-function table.contains(table, str)
+function table_contains(table, str)
   for _, el in pairs(table) do
     if el == str then
       return true
@@ -26,6 +26,7 @@ function table.contains(table, str)
   return false
 end
 
+--Magic.obsClient
 return {
   new = function(host, port)
     local obsClient = websocket.new(host or "localhost", port or 4444)
@@ -35,13 +36,11 @@ return {
     obsClient.json_decode = jsondecoder()
     obsClient.json_encode = jsonencoder()
 
-    obsClient.init = function(self)
-      self.msg_queue = {}
-      self.request_callback_list = {}
-      self.event_watcher_list = {}
-      self.connected = false
-      self.valid_requests = {}
-    end
+    obsClient.msg_queue = {}
+    obsClient.request_callback_list = {}
+    obsClient.event_watcher_list = {}
+    obsClient.connected = false
+    obsClient.valid_requests = {}
 
     obsClient.watchEvent = function (self, event, watch_func)
       self.event_watcher_list[event] = watch_func
@@ -62,14 +61,13 @@ return {
     obsClient.onopen = function(self)
       self:log("Connection to OBS opened", "Connection")
 
-      self:sendObsRequest({["request-type"] = "GetVersion",
-                            ["message-id"] = "magic-connecting",
-                            ["retry"] = true,
-                            ["callback_func"] = function(self, data)
-                              self.valid_requests = string.explode(data["available-requests"], ",")
-                              self.connected = true
-                              self:sendMessageQueue()
-                            end})
+      self:sendRequest("GetVersion",
+                       "magic-connecting",
+                       function(data)
+                         self.valid_requests = string_explode(data["available-requests"], ",")
+                         self.connected = true
+                         self:sendMessageQueue()
+                       end)
     end
 
     obsClient.addToCallbackList = function(self, callback_func, message_id)
@@ -80,7 +78,7 @@ return {
     obsClient.validateQueryParams = function(self, params)
       if type(params) == "table" 
          and params["request-type"] 
-         and table.contains(self.valid_requests, params["request-type"]) then
+         and table_contains(self.valid_requests, params["request-type"]) then
         return true
       end
       return false
@@ -92,18 +90,43 @@ return {
 
     obsClient.sendMessageQueue = function(self)
       for i, query_str in ipairs(self.msg_queue) do
-        if self:sendObsRequest(query_str) then
+        if self:_sendRequest(query_str) then
           --can i do this mid iteration?
           --TODO: no?, see docs
           table.remove(self.msg_queue, i)
         end
       end
     end
+
+    obsClient.sendRequest = function(self, request_type, ...)
+      local params = {}
+      if {...} then
+        for _, var in pairs({...}) do
+          if type(var) == "table" then 
+            params = var 
+            break
+          end
+        end
+
+        for _, var in pairs({...}) do
+          if type(var) == "function" then 
+            params["callback_func"] = var
+          elseif type(var) == "boolean" then
+            params["retry"] = var
+          elseif type(var) == "string" then 
+            params["message-id"] = var 
+          end
+        end
+      end
+      
+      params["request-type"] = request_type
+      self:_sendRequest(params)
+    end
     
-    obsClient.sendObsRequest = function(self, params)
+    obsClient._sendRequest = function(self, params)
       if self.connected or params["message-id"] == "magic-connecting" then
         if self:validateQueryParams(params) or params["message-id"] == "magic-connecting" then
-          self:log("a better log msg here", "Sending Msg")
+          self:log(params["message-id"], "Sending Msg")
 
           params["message-id"] = params["message-id"] or self:getNewMessageId()
 
@@ -111,7 +134,7 @@ return {
             self:addToCallbackList(params["callback_func"], params["message-id"])
           end
         
-          --remove the things obs doesnt need
+          --remove the things obs doesnt need before sending
           params["callback_func"] = nil
           params["retry"] = nil
           self:send(self.json_encode(params))
@@ -143,29 +166,18 @@ return {
       if not success then
         self:log("JSON Decoding Error " .. data, "Invalid Data")
       else
-        --TODO: should callbacks has success and error callbacks?
-        --if data["error"] then
-        --errors logged at Log Event: so dont add more logs here
-        --maybe if screen output is required
-        --potentially add message to self.request_callback_list for retry on error?
         if data["update-type"] then
           --call event watchers
           if self.event_watcher_list[data["update-type"]] then
+            --TODO: update this to handle multiple watchers
             self.event_watcher_list[data["update-type"]](data)
-          --end
-          --success, err = pcall(self.events[data["update-type"]], self, data)
-          --if success then
-          --  self.request_callback_list[tostring(data["message-id"])] = nil
-          --else
-            --TODO: err is "attempt to call a nil value" when no event watcher
-            --check if nil before pcall rather than relying on this
-            --log message will be wrong
-            --self:log("Ignoring " .. data["update-type"] .. " " .. err, "Unhandled Event")
+          else
+            self:log("Ignoring " .. data["update-type"], "Unhandled Event")
           end
         elseif data["message-id"] then 
           if self.request_callback_list[data["message-id"]] then
             if type(self.request_callback_list[data["message-id"]]) == "function" then
-              self.request_callback_list[data["message-id"]](self, data)
+              self.request_callback_list[data["message-id"]](data)
             else
               self:log("Ignoring " .. data["message-id"], "Invalid Callback Function")
             end

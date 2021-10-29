@@ -1,5 +1,5 @@
 # mägic.ObsClient
-Control OBS via websockets api
+Control OBS in Love2d via websockets api
 
 # Requirements
 - [Love2d](https://love2d.org) version used 11.3
@@ -15,24 +15,82 @@ Control OBS via websockets api
 
  # Usage
 
+ ```
+ function love.load()
+  obsClient = require('obsClient').new(host, port) -- defaults to localhost 4444
+end
+
+function love.update(dt)
+  obsClient:update(dt)
+end
+````
+
 ## Watch for an event
  ```
-  --obsClient:watchEvent(EVENT, FUNCTION)
+  --obsClient:watchEvent(event_type<string>, func<function>)
   obsClient:watchEvent("SwitchScenes", function (data)
-    lbl_current_scene.text = "Current Scene: " .. data["scene-name"]
+    print("Current Scene: " .. data["scene-name"])
   end)
  ```
 
- ## Send a request
+ ## Send a basic request
  ```
-  obsClient:sendObsRequest({
-    ["request-type"] = "StartStreaming"
-  })
-  --TODO: change to this
-  obsClient:sendRequest("StartStreaming", params)
-```
-see [obs-websockets](https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md) for list of `Events` request-type`s and required parameters.
+   --obsClient:sendRequest(request_type<string>)
+  obsClient:sendRequest("StartStreaming")
+ ```
+
+ ## Send a request with a callback on message received
+ ```
+  --obsClient:sendRequest(request_type<string>, func<function>)
+  obsClient:sendRequest("StartStreaming", 
+                        function(data)
+                          if data["status"] == "ok" then
+                            print("Stream is starting")
+                          end
+                        end)
+ ```
+
+  ## Send a request with parameters
+ ```
+  --obsClient:sendRequest(request_type<string>, params<table>)
+  obsClient:sendRequest("SetCurrentScene", {["scene-name"] = "Scene One"})
+ ```
+
+  ## Send a complete request
+ ```
+  --[[obsClient:sendRequest(request_type<string>, 
+                            retry<bool>, 
+                            message_id<string>, 
+                            params<table>, 
+                            func<function>)
+  ]]--
+  obsClient:sendRequest("SetCurrentScene", 
+                        true,
+                        {["scene-name"] = "Scene One"},
+                        function(data)
+                          if data["status"] == "ok" then
+                            print("Scene Switched")
+                          end
+                        end)
+ ```
+### When to use retry
+
+enable `retry` to `true` as second parameter to add request to queue to be sent when connection is established, otherwise default `false` request is dropped
+
+### When to use message_id
+
+`message_id` will be sent to Obs and used for calling the `callback_func`, leaving `message_id` blank will auto generate a unique id, you can set your own if required. 
+
+# Issues and Limitations
+
+TODO
+
+# See also
+
+see [obs-websockets](https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md) for list of `Events`, `Requests` and required parameters.
+
 
 # Working Example
 
 See [mägic.ObsClient-demo](https://github.com/scawp/magic.ObsClient-demo) for a working demo.
+
