@@ -52,12 +52,6 @@ return {
       return "magic-" .. self._message_id
     end
     
-    --update already in the require, uncomment if needs extending
-    --TODO: check if this worked before refactor, does not now
-    --obsClient.update = function(self, dt)
-      --self:update()
-    --end
-    
     obsClient.onopen = function(self)
       self:log("Connection to OBS opened", "Connection")
 
