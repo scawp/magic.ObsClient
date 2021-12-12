@@ -1,10 +1,12 @@
 # mägic.ObsClient
 Control OBS in Love2d via websockets api
 
-# Requirements
+## Requirements
 - [Love2d](https://love2d.org) version used 11.3
 - [OBS](https://obsproject.com) version used 27.0.1
 - [obs-websocket](https://github.com/Palakis/obs-websocket/releases/tag/4.9.1) version used 4.9.1
+
+## Dependencies
 - [lunajson](https://github.com/grafi-tt/lunajson)
 - [love2d-lua-websocket](https://github.com/flaribbit/love2d-lua-websocket)
 
@@ -15,7 +17,7 @@ Control OBS in Love2d via websockets api
 
  # Usage
 
- ```
+ ```lua
  function love.load()
   obsClient = require('obsClient').new(host, port) -- defaults to localhost 4444
 end
@@ -26,7 +28,7 @@ end
 ````
 
 ## Watch for an event
- ```
+ ```lua
   --obsClient:watchEvent(event_type<string>, func<function>)
   obsClient:watchEvent("SwitchScenes", function (data)
     print("Current Scene: " .. data["scene-name"])
@@ -34,13 +36,13 @@ end
  ```
 
  ## Send a basic request
- ```
+ ```lua
    --obsClient:sendRequest(request_type<string>)
   obsClient:sendRequest("StartStreaming")
  ```
 
  ## Send a request with a callback on message received
- ```
+ ```lua
   --obsClient:sendRequest(request_type<string>, func<function>)
   obsClient:sendRequest("StartStreaming", 
                         function(data)
@@ -51,13 +53,13 @@ end
  ```
 
   ## Send a request with parameters
- ```
+ ```lua
   --obsClient:sendRequest(request_type<string>, params<table>)
   obsClient:sendRequest("SetCurrentScene", {["scene-name"] = "Scene One"})
  ```
 
   ## Send a complete request
- ```
+ ```lua
   --[[obsClient:sendRequest(request_type<string>, 
                             retry<bool>, 
                             message_id<string>, 
